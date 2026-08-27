@@ -8,16 +8,16 @@ import AIComparisonSection from './components/AIComparisonSection';
 import Footer from './components/Footer';
 
 const getApiUrl = () => {
-  const envUrl = process.env.REACT_APP_API_URL;
-  if (envUrl) return envUrl;
-
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
     if (hostname.endsWith('.asse.devtunnels.ms')) {
-      const backendHost = hostname.replace(/-3000$/, '-5000');
+      const backendHost = hostname.replace('-3000', '-5000');
       return `https://${backendHost}`;
     }
   }
+
+  const envUrl = process.env.REACT_APP_API_URL;
+  if (envUrl) return envUrl;
 
   return 'http://localhost:5000';
 };

@@ -363,7 +363,8 @@ Berisi: `flask`, `requests`, `beautifulsoup4`, `lxml`, `python-dotenv`, `click`.
 Ada, namun pada alur aktif wrapper menggunakan fallback HTTP sehingga file konfigurasi tool tersebut tidak dibaca oleh aplikasi.
 
 **Frontend**
-- `REACT_APP_API_URL` di `.env` (default: `http://localhost:5000`).
+- `REACT_APP_API_URL` di `.env` (default: `http://localhost:5000`). Dipakai untuk development lokal; bila diakses lewat dev tunnel (`*.asse.devtunnels.ms`), `App.js` otomatis menimpanya dengan `https://<id>-5000.asse.devtunnels.ms` (lihat bagian 16).
+- `WDS_SOCKET_PORT` — hanya untuk akses via dev tunnel. Jangan diset statis di `.env`; gunakan script `npm run start:tunnel` yang mengisinya dengan `443` agar WebSocket HMR (Fast Refresh) terhubung. Bila diset `443` secara statis, HMR di `localhost:3000` akan rusak.
 - `tailwind.config.js`, `postcss.config.js` — konfigurasi styling (tidak diubah).
 
 **Lainnya**
@@ -395,9 +396,11 @@ Backend akan berjalan di `http://localhost:5000`
 ```bash
 cd frontend
 npm install
-npm start
+npm start              # lokal: http://localhost:3000
+# akses via dev tunnel:
+npm run start:tunnel   # set WDS_SOCKET_PORT=443 agar HMR WebSocket jalan di tunnel
 ```
-Frontend akan berjalan di `http://localhost:3000`
+Frontend akan berjalan di `http://localhost:3000` (lokal) atau di-balik tunnel `https://<id>-3000.asse.devtunnels.ms`.
 
 ### Environment Variables
 
@@ -406,11 +409,12 @@ Frontend akan berjalan di `http://localhost:3000`
 PORT=5000
 NODE_ENV=development
 FRONTEND_URL=http://localhost:3000
-PYTHON_BIN=python3
+PYTHON_BIN=python
 OSINT_TOOLS_PATH=../TOOLS
 BLACKBIRD_PATH=../TOOLS/blackbird
 THEHARVESTER_PATH=../TOOLS/theHarvester
 ```
+> Catatan: `PYTHON_BIN` diisi `python` (bukan `python3`). Di Windows, `python3` mengarah ke Windows Store stub yang gagal menjalankan `realOsintTools.py` sehingga endpoint `/api/analyze` (mode Real Tools) mengembalikan 502. Pastikan `python` mengarah ke instalasi Python 3 nyata (cek: `python --version`).
 
 **Frontend** (`frontend/.env`):
 ```
@@ -421,14 +425,19 @@ REACT_APP_API_URL=http://localhost:5000
 
 Untuk mengakses aplikasi dari internet menggunakan VS Code Port Forwarding:
 
-1. Jalankan backend (`http://localhost:5000`)
-2. Jalankan frontend (`http://localhost:3000`)
-3. Buka tab **PORTS** di VS Code
-4. Forward port **3000** (frontend)
-5. Forward port **5000** (backend)
-6. Gunakan URL forwarding yang diberikan VS Code
+1. Jalankan backend (`http://localhost:5000`) — pastikan `PORT=5000` di `backend/.env`.
+2. Jalankan frontend dengan script tunnel: `cd frontend && npm run start:tunnel` (mengatur `WDS_SOCKET_PORT=443` agar WebSocket HMR berfungsi lewat tunnel). Untuk development lokal gunakan `npm start` biasa.
+3. Buka tab **PORTS** di VS Code.
+4. Forward port **3000** (frontend) → menghasilkan URL `https://<id>-3000.asse.devtunnels.ms`.
+5. Forward port **5000** (backend) → menghasilkan URL `https://<id>-5000.asse.devtunnels.ms`. **Wajib di-forward** karena frontend otomatis memanggil API ke `-5000` (lihat `App.js` → `getApiUrl`).
+6. Buka URL frontend (`*-3000.asse.devtunnels.ms`) di browser.
 
 Pastikan backend dan frontend listen pada `0.0.0.0` agar port forwarding dapat bekerja.
+
+> Penanganan URL API di `frontend/src/App.js`:
+> - Bila `REACT_APP_API_URL` di-set, dipakai apa adanya (mode lokal).
+> - Bila hostname browser berakhiran `.asse.devtunnels.ms`, API diarahkan ke `https://<hostname-dengan-3000-diganti-5000>` — jadi port 5000 backend **harus** di-forward.
+> - Jika tidak keduanya, fallback ke `http://localhost:5000`.
 
 ### Cloudflare Tunnel (Opsional)
 
