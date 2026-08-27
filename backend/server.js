@@ -8,23 +8,34 @@ const toolsRoutes = require('./routes/tools');
 const realOsintRoutes = require('./routes/realOsint');
 
 const app = express();
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 5000;
 const projectRoot = path.resolve(__dirname, '..');
 fs.mkdirSync(path.join(projectRoot, 'logs'), { recursive: true });
 
-const developmentOrigins = ['http://localhost:3000', 'http://localhost:5173'];
-const configuredOrigins = (process.env.FRONTEND_URL || '')
+const developmentOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:5173',
+];
+
+const additionalOrigins = (process.env.FRONTEND_URL || '')
   .split(',')
   .map(origin => origin.trim())
   .filter(Boolean);
+
 const allowedOrigins = new Set(
-  process.env.NODE_ENV === 'production' ? configuredOrigins : [...developmentOrigins, ...configuredOrigins]
+  process.env.NODE_ENV === 'production' ? additionalOrigins : [...developmentOrigins, ...additionalOrigins]
 );
+
+const devTunnelOriginRegex = /^https:\/\/[a-z0-9-]+-3000\.asse\.devtunnels\.ms$/;
 
 // Middleware
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.has(origin)) return callback(null, true);
+    if (!origin || allowedOrigins.has(origin) || devTunnelOriginRegex.test(origin)) {
+      return callback(null, true);
+    }
     return callback(new Error('Origin not allowed by CORS'));
   },
 }));

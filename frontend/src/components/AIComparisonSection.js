@@ -29,7 +29,7 @@ function AIComparisonSection({ isDark, results }) {
                 🔍 OSINT Tool Analysis
               </h4>
               <p className={`text-sm leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                {results.aiComparison.osintAnalysis}
+                {results?.aiComparison?.osintAnalysis || 'OSINT analysis data not available.'}
               </p>
               <div className="mt-4 pt-4 border-t border-gray-600">
                 <p className={`text-xs font-mono ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
@@ -44,7 +44,7 @@ function AIComparisonSection({ isDark, results }) {
                 🧠 AI Intelligence Insight
               </h4>
               <p className={`text-sm leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                {results.aiComparison.aiInsight}
+                {results?.aiComparison?.aiInsight || 'AI insight data not available.'}
               </p>
               <div className="mt-4 pt-4 border-t border-purple-400">
                 <p className={`text-xs font-mono ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>

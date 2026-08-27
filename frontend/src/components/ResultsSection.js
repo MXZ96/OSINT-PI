@@ -5,12 +5,18 @@ function ResultsSection({ isDark, results }) {
   const [onlyRelated, setOnlyRelated] = useState(false);
   const [yearFilter, setYearFilter] = useState('all'); // all | 1 | 3 | 5
 
+  const safeOsintResults = Array.isArray(results?.osintResults) ? results.osintResults : [];
+  const safeLeakedData = Array.isArray(results?.leakedData) ? results.leakedData : [];
+  const safeInsights = Array.isArray(results?.insights) ? results.insights : [];
+  const safeRecommendations = Array.isArray(results?.recommendations) ? results.recommendations : [];
+  const safeRiskScore = typeof results?.riskScore === 'number' ? results.riskScore : 0;
+
   const visibleResults = onlyRelated
-    ? results.osintResults.filter(r => r.isLikelyOwner)
-    : results.osintResults;
+    ? safeOsintResults.filter(r => r.isLikelyOwner)
+    : safeOsintResults;
 
   const currentYear = new Date().getFullYear();
-  const visibleLeaks = results.leakedData.filter(leak => {
+  const visibleLeaks = safeLeakedData.filter(leak => {
     if (yearFilter === 'all' || !leak.year) return true;
     return currentYear - leak.year <= parseInt(yearFilter, 10);
   });
@@ -86,7 +92,7 @@ function ResultsSection({ isDark, results }) {
           <Globe className={`size-6 ${isDark ? 'text-cyberblue-400' : 'text-blue-500'}`} />
           OSINT Findings
           <span className={`text-sm font-normal ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-            ({visibleResults.length}/{results.osintResults.length})
+            ({safeOsintResults.length}/{safeOsintResults.length})
           </span>
         </h3>
 
@@ -383,7 +389,7 @@ function ResultsSection({ isDark, results }) {
           </h3>
 
           <div className="space-y-4">
-            {results.insights.map((insight, index) => {
+            {safeInsights.map((insight, index) => {
               const Icon = iconMap[insight.icon] || Globe;
               return (
                 <div
@@ -410,32 +416,32 @@ function ResultsSection({ isDark, results }) {
           {/* Risk Score */}
           <div className={`${isDark ? 'glass' : 'bg-white border border-gray-200'} rounded-xl p-8`}>
             <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-              <AlertCircle className={`size-6 ${getRiskColor(results.riskScore)}`} />
+              <AlertCircle className={`size-6 ${getRiskColor(safeRiskScore)}`} />
               Risk Assessment
             </h3>
 
             <div className="text-center">
-              <div className={`inline-flex items-center justify-center w-24 h-24 rounded-full ${getRiskBgColor(results.riskScore)} mb-4`}>
-                <span className={`text-4xl font-bold ${getRiskColor(results.riskScore)}`}>
-                  {results.riskScore}
+              <div className={`inline-flex items-center justify-center w-24 h-24 rounded-full ${getRiskBgColor(safeRiskScore)} mb-4`}>
+                <span className={`text-4xl font-bold ${getRiskColor(safeRiskScore)}`}>
+                  {safeRiskScore}
                 </span>
               </div>
               <p className="font-bold text-lg mb-2">
-                <span className={getRiskColor(results.riskScore)}>
-                  {getRiskLabel(results.riskScore)} Risk
+                <span className={getRiskColor(safeRiskScore)}>
+                  {getRiskLabel(safeRiskScore)} Risk
                 </span>
               </p>
 
               <div className="w-full bg-gray-700 rounded-full h-3 mb-4 overflow-hidden">
                 <div
                   className={`h-full transition-all ${
-                    results.riskScore < 30
+                    safeRiskScore < 30
                       ? 'bg-green-500'
-                      : results.riskScore < 60
+                      : safeRiskScore < 60
                         ? 'bg-yellow-500'
                         : 'bg-red-500'
                   }`}
-                  style={{ width: `${results.riskScore}%` }}
+                  style={{ width: `${safeRiskScore}%` }}
                 ></div>
               </div>
 
@@ -450,7 +456,7 @@ function ResultsSection({ isDark, results }) {
             <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
               Leaked Data
               <span className={`text-sm font-normal ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                ({visibleLeaks.length}/{results.leakedData.length})
+                ({visibleLeaks.length}/{safeLeakedData.length})
               </span>
             </h3>
 
@@ -535,7 +541,7 @@ function ResultsSection({ isDark, results }) {
         <h3 className="text-xl font-bold mb-6">Security Recommendations</h3>
 
         <div className="grid md:grid-cols-2 gap-4">
-          {results.recommendations.map((rec, index) => (
+          {safeRecommendations.map((rec, index) => (
             <div
               key={index}
               className={`p-4 rounded-lg flex items-start gap-3 ${isDark ? 'bg-cyberdark-800' : 'bg-gray-100'}`}

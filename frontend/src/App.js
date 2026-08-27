@@ -7,7 +7,22 @@ import ResultsSection from './components/ResultsSection';
 import AIComparisonSection from './components/AIComparisonSection';
 import Footer from './components/Footer';
 
-const API_URL = (process.env.REACT_APP_API_URL || 'http://localhost:5001').replace(/\/$/, '');
+const getApiUrl = () => {
+  const envUrl = process.env.REACT_APP_API_URL;
+  if (envUrl) return envUrl;
+
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    if (hostname.endsWith('.asse.devtunnels.ms')) {
+      const backendHost = hostname.replace(/-3000$/, '-5000');
+      return `https://${backendHost}`;
+    }
+  }
+
+  return 'http://localhost:5000';
+};
+
+const API_URL = getApiUrl().replace(/\/$/, '');
 
 function App() {
   const [isDark, setIsDark] = useState(true);
@@ -45,6 +60,9 @@ function App() {
     setResults(null);
 
     try {
+      console.log('[Frontend] API_URL:', API_URL);
+      console.log('[Frontend] Request payload:', data);
+      
       // Use single endpoint with tool selection flag
       const response = await fetch(`${API_URL}/api/analyze`, {
         method: 'POST',
@@ -54,7 +72,11 @@ function App() {
         body: JSON.stringify({ ...data, useRealTools }),
       });
 
+      console.log('[Frontend] Response status:', response.status, response.statusText);
+      
       const analysisResults = await response.json();
+      console.log('[Frontend] Parsed response:', analysisResults);
+      
       if (!response.ok) {
         throw new Error(analysisResults.error || 'Analysis request failed');
       }
@@ -71,7 +93,7 @@ function App() {
         setIsLoading(false);
       }
     } catch (error) {
-      console.error('Analysis error:', error);
+      console.error('[Frontend] Analysis error:', error);
       
       if (useRealTools) {
         // Show error but don't fall back to mock
@@ -79,6 +101,15 @@ function App() {
           error: 'Real OSINT analysis failed',
           message: error.message,
           query: data,
+          osintResults: [],
+          leakedData: [],
+          insights: [],
+          recommendations: [],
+          riskScore: 0,
+          aiComparison: {
+            osintAnalysis: '',
+            aiInsight: '',
+          },
         });
       } else {
         // Mock mode fallback

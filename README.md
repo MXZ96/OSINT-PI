@@ -1,4 +1,4 @@
-# Dokumentasi Kode
+# OSINT Intelligence Platform — Dokumentasi Kode
 
 **Project:** OSINT Intelligence Platform
 **Dikembangkan oleh:** Ikbaar Rafi Hermansyah
@@ -23,11 +23,31 @@ Teknologi yang benar-benar digunakan (terlihat di `package.json` dan `import`):
 ```
 OSINT PI/
 ├── backend/                # API Express + layanan analisis + wrapper Python
+│   ├── .env                # Konfigurasi environment backend
+│   ├── package.json        # Dependency Node.js
+│   ├── package-lock.json
+│   ├── requirements.txt    # Dependency Python (lihat catatan bagian 15)
+│   ├── server.js           # Entry point Express
+│   ├── routes/             # osint.js, tools.js, realOsint.js
+│   └── services/           # osintAnalyzer.js, fullNameDiscovery.js,
+│                           # htmlScraper.js, rateLimiter.js, realOsintTools.py
 ├── frontend/               # Aplikasi React (src, public, build)
+│   ├── .env                # REACT_APP_API_URL
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── tailwind.config.js
+│   ├── postcss.config.js
+│   ├── public/index.html
+│   ├── src/                # index.js, App.js, index.css, components/
+│   └── build/              # Hasil npm run build
 ├── TOOLS/                  # Tool OSINT pihak ketiga (blackbird, theHarvester)
+│   ├── blackbird/          # Source code Blackbird
+│   └── theHarvester/       # Source code theHarvester
 ├── logs/                   # File log (blackbird.log)
 ├── .gitignore
-├── DOKUMENTASI_KODE_IKBAAR_RAFI_HERMANSYAH.md  # dokumentasi ini
+├── LICENSE                 # Lisensi project
+├── LOCAL_DEVELOPMENT.md    # Panduan development lokal
+├── README.md               # Dokumentasi ini
 └── OSINT PI.code-workspace # Konfigurasi workspace VS Code
 ```
 
@@ -87,11 +107,11 @@ Berisi source code tool pihak ketiga (`blackbird`, `theHarvester`). Pada impleme
 - Blackbird (`TOOLS/blackbird/`)
 - theHarvester (`TOOLS/theHarvester/`)
 
-**Runtime / Deployment**
-- `npm start` (backend: `node server.js`)
-- `npm start` (frontend: `react-scripts start`), `npm run build` menghasilkan `frontend/build`
-- Environment `PORT` untuk backend
-- Backend Docker dideploy ke Northflank; frontend CRA dideploy ke Vercel
+**Runtime / Development**
+- Backend: `npm start` (`node server.js`) atau `npm run dev` (`nodemon server.js`)
+- Frontend: `npm start` untuk pengembangan (`react-scripts start`), `npm run build` menghasilkan `frontend/build`
+- Environment `PORT` untuk backend (default: 5000)
+- Project berjalan sepenuhnya di komputer lokal
 
 ---
 
@@ -100,10 +120,10 @@ Berisi source code tool pihak ketiga (`blackbird`, `theHarvester`). Pada impleme
 Arsitektur yang ditemukan di kode adalah tiga lapis:
 
 ```
-Browser (React, port 3000)
-        │  POST ${REACT_APP_API_URL}/api/analyze
+Browser (React, http://localhost:3000)
+        │  POST http://localhost:5000/api/analyze
         ▼
-Backend Express (Node.js, port 5000)
+Backend Express (Node.js, http://localhost:5000)
         │  jika useRealTools = true  → spawn python services/realOsintTools.py
         │  jika useRealTools = false → analyzeTarget() (mock)
         ▼
@@ -162,7 +182,7 @@ Hubungan antar bagian:
 - `Footer.js` — informasi & link statis.
 
 **API request**
-- `fetch(`${REACT_APP_API_URL}/api/analyze`, {...})` dengan `Content-Type: application/json`. URL diatur melalui environment variable CRA.
+- `fetch(\`http://localhost:5000/api/analyze\`, {...})` dengan `Content-Type: application/json`. URL diatur melalui environment variable CRA.
 
 **Proses menampilkan hasil**
 - `ResultsSection` membaca `results.osintResults`, `results.leakedData`, `results.insights`, `results.riskScore`, `results.recommendations`.
@@ -343,7 +363,7 @@ Berisi: `flask`, `requests`, `beautifulsoup4`, `lxml`, `python-dotenv`, `click`.
 Ada, namun pada alur aktif wrapper menggunakan fallback HTTP sehingga file konfigurasi tool tersebut tidak dibaca oleh aplikasi.
 
 **Frontend**
-- Tidak ada file `.env`; URL API di-hardcode `http://localhost:5000` di `App.js:53`.
+- `REACT_APP_API_URL` di `.env` (default: `http://localhost:5000`).
 - `tailwind.config.js`, `postcss.config.js` — konfigurasi styling (tidak diubah).
 
 **Lainnya**
@@ -354,13 +374,75 @@ Ada, namun pada alur aktif wrapper menggunakan fallback HTTP sehingga file konfi
 
 ---
 
-## 16. Deployment
+## 16. Local Development
 
-Berdasarkan file project yang tersedia:
-- **Backend:** dijalankan dengan `npm start` (`node server.js`). Port diambil dari env `PORT`.
-- **Frontend:** `npm start` untuk pengembangan; `npm run build` menghasilkan folder `frontend/build` (asset statis siap di-serve). Folder `build/` sudah ada di repository.
-- Tidak ditemukan `Dockerfile` atau konfigurasi CI/CD di root project utama (hanya ada di dalam `TOOLS/` sebagai milik tool pihak ketiga). Deployment cukup dilakukan dengan menyalurkan `frontend/build` ke static server dan menjalankan backend Express.
-- Prerequisite mode real: Python 3 + `httpx` + `aiohttp` + `playwright` + akses internet.
+Project ini dirancang untuk dijalankan sepenuhnya di komputer lokal.
+
+### Prerequisites
+- Node.js (untuk backend dan frontend)
+- Python 3 (untuk mode real OSINT)
+- npm atau yarn
+
+### Menjalankan Backend
+```bash
+cd backend
+npm install
+npm run dev
+```
+Backend akan berjalan di `http://localhost:5000`
+
+### Menjalankan Frontend
+```bash
+cd frontend
+npm install
+npm start
+```
+Frontend akan berjalan di `http://localhost:3000`
+
+### Environment Variables
+
+**Backend** (`backend/.env`):
+```
+PORT=5000
+NODE_ENV=development
+FRONTEND_URL=http://localhost:3000
+PYTHON_BIN=python3
+OSINT_TOOLS_PATH=../TOOLS
+BLACKBIRD_PATH=../TOOLS/blackbird
+THEHARVESTER_PATH=../TOOLS/theHarvester
+```
+
+**Frontend** (`frontend/.env`):
+```
+REACT_APP_API_URL=http://localhost:5000
+```
+
+### VS Code Port Forwarding
+
+Untuk mengakses aplikasi dari internet menggunakan VS Code Port Forwarding:
+
+1. Jalankan backend (`http://localhost:5000`)
+2. Jalankan frontend (`http://localhost:3000`)
+3. Buka tab **PORTS** di VS Code
+4. Forward port **3000** (frontend)
+5. Forward port **5000** (backend)
+6. Gunakan URL forwarding yang diberikan VS Code
+
+Pastikan backend dan frontend listen pada `0.0.0.0` agar port forwarding dapat bekerja.
+
+### Cloudflare Tunnel (Opsional)
+
+Untuk demo/testing dari internet, gunakan Cloudflare Tunnel:
+
+```bash
+# Tunnel untuk backend
+cloudflared tunnel --url http://localhost:5000
+
+# Tunnel untuk frontend
+cloudflared tunnel --url http://localhost:3000
+```
+
+Tunnel hanya digunakan sebagai jalur akses sementara menuju aplikasi yang tetap berjalan di komputer lokal. Tidak ada deployment cloud.
 
 ---
 
