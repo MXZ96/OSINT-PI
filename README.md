@@ -3,8 +3,6 @@
 **Project:** OSINT Intelligence Platform
 **Dikembangkan oleh:** Ikbaar Rafi Hermansyah
 
-> Dokumentasi ini ditulis berdasarkan source code yang benar-benar ada di repository pada saat penulisan. Bagian yang tidak ditemukan implementasinya ditandai dengan **(perlu diperiksa)** agar tidak menyesatkan.
-
 ---
 
 ## 1. Identitas Project
@@ -93,6 +91,7 @@ Berisi source code tool pihak ketiga (`blackbird`, `theHarvester`). Pada impleme
 - `npm start` (backend: `node server.js`)
 - `npm start` (frontend: `react-scripts start`), `npm run build` menghasilkan `frontend/build`
 - Environment `PORT` untuk backend
+- Backend Docker dideploy ke Northflank; frontend CRA dideploy ke Vercel
 
 ---
 
@@ -102,7 +101,7 @@ Arsitektur yang ditemukan di kode adalah tiga lapis:
 
 ```
 Browser (React, port 3000)
-        │  POST http://localhost:5000/api/analyze
+        │  POST ${REACT_APP_API_URL}/api/analyze
         ▼
 Backend Express (Node.js, port 5000)
         │  jika useRealTools = true  → spawn python services/realOsintTools.py
@@ -163,7 +162,7 @@ Hubungan antar bagian:
 - `Footer.js` — informasi & link statis.
 
 **API request**
-- `fetch('http://localhost:5000/api/analyze', {...})` dengan `Content-Type: application/json` (`App.js:53`). URL di-hardcode, bukan dari env.
+- `fetch(`${REACT_APP_API_URL}/api/analyze`, {...})` dengan `Content-Type: application/json`. URL diatur melalui environment variable CRA.
 
 **Proses menampilkan hasil**
 - `ResultsSection` membaca `results.osintResults`, `results.leakedData`, `results.insights`, `results.riskScore`, `results.recommendations`.
